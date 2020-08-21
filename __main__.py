@@ -98,22 +98,3 @@ async def main(argv):
 if __name__ == '__main__':
 	loop = asyncio.get_event_loop()
 	loop.run_until_complete(main(sys.argv[1:]))
-
-
-	# 	count = count + 1
-	# asyncio.gather(getPage([for item in urls]))
-	# payloads.append(await asyncio.create_task(getPage(count)))
-
-	# for key, item in payloads:
-	# 	print(await item["title"])
-
-
-
-	# print(len(payloads))
-	# for key, item in payloads:
-	# 	await item
-	# 	print(key, item)
-	# 	z = json.loads(item.text)
-	# 	for item in z["data"]:
-	# 		bookList.append(item["title"])
-	# 		print(item["title"])

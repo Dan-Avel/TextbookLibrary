@@ -12,13 +12,43 @@ async def fetchUrl(session, url):
 	async with session.get(url) as response:
 		return await response.text()
 
-def listSubjects():
+async def fetchAllData(pages):
+	dataVal = []
+	count = 1
+	async with aiohttp.ClientSession() as session:
+		while count < pages:
+			print(str(int((count/pages)*100))+"%", end="\r")
+			html = fetchUrl(session, "https://open.umn.edu/opentextbooks/textbooks.json?page="+str(count))
+			resp = json.loads(await html)
+			dataVal = dataVal + resp["data"]
+			count = count + 1
+	return dataVal
+
+async def listSubjects():
 	subjectList = []
-	x = requests.get("https://open.umn.edu/opentextbooks/subjects.json")
+	x = requests.get("https://open.umn.edu/opentextbooks/textbooks.json")
 	y = json.loads(x.text)
 
-	for item in y["data"]:
-		print(item["name"])
+	total = int(y["links"]["total_pages"])
+
+	data = await fetchAllData(total)
+	func = lambda book: book["subjects"]
+
+	for item in data:
+		for subj in func(item):
+			if subj["name"] not in subjectList:
+				subjectList.append(subj["name"])
+	subjectList.sort()
+	for item in subjectList:
+		print(item)
+
+def printBook(book):
+	text = f""
+	text += book["title"]+"\n"
+	text += lambda subject: subject["name"] in book["subjects"]+"\n"
+	text += lambda format: (format["format"]+":"+format["url"] in book["formats"])+"\n"
+	text += book["url"]+"\n"
+	print(text)
 
 async def printList(subject=None):
 	print("started")
@@ -34,21 +64,15 @@ async def printList(subject=None):
 	payloads = []
 	data = []
 
-	while count < total:
-		urls.append("https://open.umn.edu/opentextbooks/textbooks.json?page="+str(count))
-		count = count+1
+	bookList = await fetchAllData(total)
 
-	async with aiohttp.ClientSession() as session:
-		for u in urls:
-			print(u)
-			html = fetchUrl(session, u)
-			bookList = bookList + getTitle(json.loads(await html))
-	if (len(sys.argv) > 1):
-		bookList = list(filter(lambda book: (sys.argv[1]) in book["subjects"], bookList))
-	bookList.sort(key=lambda book: len(book["subjects"]), reverse=True)
-	bookList.sort(key=lambda book: book["subjects"])
-	for b in bookList:
-		print(str(b["subjects"]) +" | "+ b["title"])
+	for book in bookList:
+		subjects = list(set(map(lambda subj: subj["name"].lower(), book["subjects"])))
+		if sys.argv[1].lower() not in subjects:
+			bookList.remove(book)
+
+	for i in bookList:
+		printBook(i)
 
 
 def getTitle(resp):
@@ -67,7 +91,7 @@ async def main(argv):
 		await printList();
 	else:
 		if argv[0].lower() == "list":
-			listSubjects()
+			await listSubjects()
 		else:
 			await printList(argv[0])
 

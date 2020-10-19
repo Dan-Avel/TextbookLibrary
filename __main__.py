@@ -45,8 +45,8 @@ async def listSubjects():
 def printBook(book):
 	text = f""
 	text += book["title"]+"\n"
-	text += lambda subject: subject["name"] in book["subjects"]+"\n"
-	text += lambda format: (format["format"]+":"+format["url"] in book["formats"])+"\n"
+	text += str([subject["name"] for subject in book["subjects"]]) +"\n"
+	text += str([forma["format"]+":"+forma["url"] for forma in book["formats"]]) +"\n"
 	text += book["url"]+"\n"
 	print(text)
 
@@ -65,11 +65,12 @@ async def printList(subject=None):
 	data = []
 
 	bookList = await fetchAllData(total)
-
+	print(len(sys.argv))
 	for book in bookList:
 		subjects = list(set(map(lambda subj: subj["name"].lower(), book["subjects"])))
-		if sys.argv[1].lower() not in subjects:
-			bookList.remove(book)
+		if subject != None:
+			if sys.argv[1].lower() not in subjects:
+				bookList.remove(book)
 
 	for i in bookList:
 		printBook(i)
@@ -98,3 +99,22 @@ async def main(argv):
 if __name__ == '__main__':
 	loop = asyncio.get_event_loop()
 	loop.run_until_complete(main(sys.argv[1:]))
+
+
+	# 	count = count + 1
+	# asyncio.gather(getPage([for item in urls]))
+	# payloads.append(await asyncio.create_task(getPage(count)))
+
+	# for key, item in payloads:
+	# 	print(await item["title"])
+
+
+
+	# print(len(payloads))
+	# for key, item in payloads:
+	# 	await item
+	# 	print(key, item)
+	# 	z = json.loads(item.text)
+	# 	for item in z["data"]:
+	# 		bookList.append(item["title"])
+	# 		print(item["title"])
